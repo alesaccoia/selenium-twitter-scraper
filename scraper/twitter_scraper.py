@@ -561,7 +561,7 @@ It may be due to the following:
                 time.sleep(1)
             except:
                 print("Exception, skipping")
-                pass
+                continue
 
         self.data = datal
 
