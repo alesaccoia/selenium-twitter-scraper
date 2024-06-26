@@ -267,7 +267,7 @@ It may be due to the following:
                 unusual_activity = self.driver.find_element(
                     "xpath", "//input[@data-testid='ocfEnterTextTextInput']"
                 )
-                unusual_activity.send_keys(self.username)
+                unusual_activity.send_keys(self.mail)
                 unusual_activity.send_keys(Keys.RETURN)
                 sleep(3)
                 break
