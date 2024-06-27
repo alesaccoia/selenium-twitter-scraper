@@ -5,6 +5,7 @@ from .progress import Progress
 from .scroller import Scroller
 from .tweet import Tweet
 import time
+import re
 
 from datetime import datetime
 from fake_headers import Headers
@@ -20,6 +21,7 @@ from selenium.common.exceptions import (
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.common.by import By
 
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.firefox.service import Service as FirefoxService
@@ -267,7 +269,7 @@ It may be due to the following:
                 unusual_activity = self.driver.find_element(
                     "xpath", "//input[@data-testid='ocfEnterTextTextInput']"
                 )
-                unusual_activity.send_keys(self.username)
+                unusual_activity.send_keys(self.mail)
                 unusual_activity.send_keys(Keys.RETURN)
                 sleep(3)
                 break
@@ -556,12 +558,31 @@ It may be due to the following:
                 
                 for index, content in enumerate(contents):
                     tweet_flat[4] += content.text
-    
+
+                href = None
+
+                # Check if 'card.layoutLarge.media' exists and extract the href
+                try:
+                    card_media = tweet_cards[0].find_element(By.XPATH, '(.//div[@data-testid="card.layoutLarge.media"])[1]/a')
+                    href = card_media.get_attribute('href')
+                    print(f"Media link: {href}")
+                except:
+                    print("No media link found.")
+
+                if href is None:    
+                    url_pattern = re.compile(
+                        r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
+                    )
+                    match = url_pattern.search(tweet_flat[4])
+                    if match:
+                        href = match.group(0)
+
+                tweet_flat.append(href)
                 datal.append(tweet_flat)
                 time.sleep(1)
             except:
                 print("Exception, skipping")
-                pass
+                continue
 
         self.data = datal
 
@@ -600,6 +621,7 @@ It may be due to the following:
             "Profile Image": [tweet[12] for tweet in self.data],
             "Tweet Link": [tweet[13] for tweet in self.data],
             "Tweet ID": [f"tweet_id:{tweet[14]}" for tweet in self.data],
+            "href": [tweet[15] for tweet in self.data],
         }
 
         if self.scraper_details["poster_details"]:
