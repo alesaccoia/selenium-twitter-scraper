@@ -6,6 +6,8 @@ from .scroller import Scroller
 from .tweet import Tweet
 import time
 import re
+from datetime import datetime
+import pytz
 
 from datetime import datetime
 from fake_headers import Headers
@@ -32,6 +34,13 @@ from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
 
 TWITTER_LOGIN_URL = "https://twitter.com/i/flow/login"
+
+def parse_tweet_datetime(date_str):
+    # Parse the datetime string without the 'Z' (Zulu time indicator for UTC)
+    dt = datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S.%fZ')
+    # Set the timezone to UTC
+    dt = dt.replace(tzinfo=pytz.UTC)
+    return dt
 
 
 class Twitter_Scraper:
@@ -385,7 +394,7 @@ It may be due to the following:
         scrape_latest=True,
         scrape_top=False,
         scrape_poster_details=False,
-        tweet_urls=[''],
+        min_date=None,
         router=None,
     ):
         self._config_scraper(
@@ -402,6 +411,7 @@ It may be due to the following:
             router = self.router
 
         has_error = False
+        out_last_tweet = False
 
         router()
 
@@ -468,10 +478,16 @@ It may be due to the following:
                             if tweet:
                                 if not tweet.error and tweet.tweet is not None:
                                     if not tweet.is_ad:
+                                        tweet_date = parse_tweet_datetime(tweet.date_time)
+                                        if min_date and tweet_date <= min_date:
+                                            self.scroller.scrolling = False
+                                            out_last_tweet = True
+                                            break
+                                        
                                         self.data.append(tweet.tweet)
                                         added_tweets += 1
                                         self.progress.print_progress(len(self.data), False, 0, no_tweets_limit)
-
+                                        
                                         if len(self.data) >= self.max_tweets and not no_tweets_limit:
                                             self.scroller.scrolling = False
                                             break
@@ -531,7 +547,7 @@ It may be due to the following:
                 print(f"Error scraping tweets: {e}")
                 break
 
-        if len(self.data) == 0:
+        if not out_last_tweet and len(self.data) == 0:
             has_error = True
 
         datal = list()
@@ -539,10 +555,6 @@ It may be due to the following:
             try:
                 tweet_flat = list(tweet)
                 tweet_url = tweet_flat[13]
-
-                if tweet_url in tweet_urls:
-                    print("Existing tweet")
-                    continue
                     
                 self.driver.get(tweet_url)  # Corrected line
                 sleep(3)
@@ -586,7 +598,7 @@ It may be due to the following:
 
         self.data = datal
 
-        if len(self.data) >= self.max_tweets or no_tweets_limit:
+        if out_last_tweet or len(self.data) >= self.max_tweets or no_tweets_limit:
             print("Scraping Complete")
         else:
             print("Scraping Incomplete")
