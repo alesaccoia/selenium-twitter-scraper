@@ -89,6 +89,8 @@ class Twitter_Scraper:
             scrape_top,
             scrape_poster_details,
         )
+    def terminate():
+        self.driver.quit()
 
     def _config_scraper(
         self,
@@ -605,7 +607,6 @@ It may be due to the following:
 
         if not no_tweets_limit:
             print("Tweets: {} out of {}\n".format(len(self.data), self.max_tweets))
-
         return has_error
 
     def save_to_csv(self):
