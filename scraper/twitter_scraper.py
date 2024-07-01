@@ -89,7 +89,8 @@ class Twitter_Scraper:
             scrape_top,
             scrape_poster_details,
         )
-    def terminate():
+
+    def terminate(self):
         self.driver.quit()
 
     def _config_scraper(
