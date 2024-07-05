@@ -556,24 +556,31 @@ It may be due to the following:
         datal = list()
         for i, tweet in enumerate(self.data):
             try:
+                print(i)
                 tweet_flat = list(tweet)
                 tweet_url = tweet_flat[13]
-                    
+                print(tweet_url)    
                 self.driver.get(tweet_url)  # Corrected line
-                sleep(3)
-    
+                sleep(20)
+                self.driver.save_screenshot(f'{i}.png')
+                with open(f'page_source_{i}.html', 'w', encoding='utf-8') as file:
+                    file.write(self.driver.page_source)
+                print("Getting tweet cards")
                 tweet_cards = self.driver.find_elements(
                     "xpath", '//article[@data-testid="tweet" and not(@disabled)]'
                 )
+                print(tweet_cards)
                 contents = tweet_cards[0].find_elements(
                     "xpath",
                     '(.//div[@data-testid="tweetText"])[1]/span | (.//div[@data-testid="tweetText"])[1]/a',
                 )
+                print(contents)
                 tweet_flat[4] = ""
                 
                 for index, content in enumerate(contents):
                     tweet_flat[4] += content.text
-
+                
+                print(tweet_flat)
                 href = None
 
                 # Check if 'card.layoutLarge.media' exists and extract the href
@@ -581,8 +588,8 @@ It may be due to the following:
                     card_media = tweet_cards[0].find_element(By.XPATH, '(.//div[@data-testid="card.layoutLarge.media"])[1]/a')
                     href = card_media.get_attribute('href')
                     print(f"Media link: {href}")
-                except:
-                    print("No media link found.")
+                except Exception as e:
+                    print(f"No media link found in tweet {tweet_url}")
 
                 if href is None:    
                     url_pattern = re.compile(
@@ -595,8 +602,8 @@ It may be due to the following:
                 tweet_flat.append(href)
                 datal.append(tweet_flat)
                 time.sleep(1)
-            except:
-                print("Exception, skipping")
+            except Exception as e:
+                print(f"Skipping tweet {tweet_url} after exception: {e}")
                 continue
 
         self.data = datal
