@@ -562,9 +562,9 @@ It may be due to the following:
                 print(tweet_url)    
                 self.driver.get(tweet_url)  # Corrected line
                 sleep(20)
-                self.driver.save_screenshot(f'{i}.png')
-                with open(f'page_source_{i}.html', 'w', encoding='utf-8') as file:
-                    file.write(self.driver.page_source)
+                #self.driver.save_screenshot(f'{i}.png')
+                #with open(f'page_source_{i}.html', 'w', encoding='utf-8') as file:
+                #    file.write(self.driver.page_source)
                 print("Getting tweet cards")
                 tweet_cards = self.driver.find_elements(
                     "xpath", '//article[@data-testid="tweet" and not(@disabled)]'
